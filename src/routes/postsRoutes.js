@@ -1,35 +1,43 @@
-import express from "express";
-import multer from "multer";
-import { listarPosts, postarNovoPost, uploadImagem } from "../controlles/postsControllers.js";
-import { v4 as uuidv4 } from 'uuid'; // Importa a função para gerar IDs únicos (UUIDs)
+import express from "express"; // Importa o framework Express para criar a aplicação web
+import multer from "multer"; // Importa o Multer para lidar com uploads de arquivos
+import { listarPosts, postarNovoPost, uploadImagem, atualizarNovoPost } from "../controlles/postsControllers.js"; // Importa as funções controladoras para lidar com a lógica dos posts
+import cors from "cors";
 
-// Configura o armazenamento de arquivos usando o multer.diskStorage
+const corsOptions = {
+  origin: "http://localhost:8000",
+  optionsSuccessStatus: 200
+}
+
+// Configura o armazenamento do Multer para uploads de imagens
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Define o diretório de destino para os arquivos carregados. Certifique-se de que esta pasta exista.
-    },
-    filename: (req, file, cb) => {
-        const ext = file.originalname.split('.').pop(); // Obtém a extensão do arquivo original.
-        const uniqueSuffix = uuidv4(); // Gera um ID único para evitar conflitos de nomes de arquivo.
-        cb(null, `${uniqueSuffix}.${ext}`); // Define o nome do arquivo com um sufixo único e a extensão original.
-    }
+  destination: function (req, file, cb) {
+    // Especifica o diretório para armazenar as imagens enviadas
+    cb(null, 'uploads/'); // Substitua por seu caminho de upload desejado
+  },
+  filename: function (req, file, cb) {
+    // Mantém o nome original do arquivo por simplicidade
+    cb(null, file.originalname); // Considere usar uma estratégia de geração de nomes únicos para produção
+  }
 });
 
-// Configura o middleware multer com o armazenamento definido acima.
-const upload = multer({ storage });
+// Cria uma instância do middleware Multer
+const upload = multer({ storage: storage });
 
+// Define as rotas usando o objeto Express app
 const routes = (app) => {
-    // Habilita o middleware para analisar requisições JSON.
-    app.use(express.json());
+  // Permite que o servidor interprete corpos de requisições no formato JSON
+  app.use(express.json());
+  app.use(cors(corsOptions))
+  // Rota para recuperar uma lista de todos os posts
+  app.get("/posts", listarPosts); // Chama a função controladora apropriada
 
-    // Define a rota GET para buscar todos os posts.
-    app.get("/posts", listarPosts);
+  // Rota para criar um novo post
+  app.post("/posts", postarNovoPost); // Chama a função controladora para criação de posts
 
-    // Define a rota POST para criar um novo post (sem imagem).
-    app.post("/posts", postarNovoPost);
+  // Rota para upload de imagens (assumindo uma única imagem chamada "imagem")
+  app.post("/upload", upload.single("imagem"), uploadImagem); // Chama a função controladora para processamento da imagem`
 
-    // Define a rota POST para upload de imagem, usando o middleware multer.
-    app.post("/upload", upload.single("imagem"), uploadImagem); // upload.single espera um campo chamado 'imagem' no formulário
+  app.put("/upload/:id", atualizarNovoPost)
 };
 
 export default routes;
