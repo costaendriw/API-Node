@@ -34,7 +34,7 @@ A API pode ser acessada através das seguintes rotas:
   "conteudo": "Este é o conteúdo do meu post."
 }
 
-#Exemplo de requisição PUT /posts/:id:
+# Exemplo de requisição PUT /posts/:id:
 
 {
   "alt": "Descrição alternativa da imagem"
